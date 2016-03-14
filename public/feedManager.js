@@ -1,35 +1,3 @@
-var showLoginModal = function()
-{
-    Ply.factory('login', function (options, data, resolve) {
-    options.flags = {
-      closeBtn: false,
-      closeByEsc: true,
-      closeByOverlay: true,
-      visibleOverlayInStack: true
-    };
-
-    options.onaction = function (ui) {
-      var data = ui.data;
-      console.log(ui.data);
-      
-    };
-
-    // Use base factory
-    Ply.factory.use('base', options, {
-      title: 'Login',
-      form: {
-        email: 'E-mail',
-        password: { hint: 'Password', type: 'password' }
-      },
-      ok: 'Enter',
-      cancel: false
-    }, resolve);
-  });
-  Ply.dialog('login').done(function (ui) {
-    Ply.dialog('alert', 'Bingo!');
-  });
-}
-
 var theUser = "test";
 var allSubs = null;
 var postObjList = null;
