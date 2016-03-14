@@ -1,141 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title> Simple JS Eval</title>
+  <title>Fuzzy RSS Reader</title>
   <script src='script.js'> </script>
   <script src='jquery-2.2.1.min.js'> </script>
   <script src='ply.js'> </script>
-  <link rel="stylesheet" type="text/css" href="ply.css">
-  <script>
-
-
-var showLoginModal = function()
-{
-    Ply.factory('login', function (options, data, resolve) {
-    options.flags = {
-      closeBtn: false,
-      closeByEsc: true,
-      closeByOverlay: true,
-      visibleOverlayInStack: true
-    };
-
-    options.onaction = function (ui) {
-      var data = ui.data;
-      console.log(ui.data);
-      
-    };
-
-    // Use base factory
-    Ply.factory.use('base', options, {
-      title: 'Login',
-      form: {
-        email: 'E-mail',
-        password: { hint: 'Password', type: 'password' }
-      },
-      ok: 'Enter',
-      cancel: false
-    }, resolve);
-  });
-  Ply.dialog('login').done(function (ui) {
-    Ply.dialog('alert', 'Bingo!');
-  });
-}
-
-var theUser = "test";
-var allSubs = null;
-var postObjList = null;
-var debug = null;
-
-var aSubSelected = function(index){
-  var list = document.getElementById("myFeedList").getElementsByClassName("listItem")
-  for(var i = 0; i < list.length; i++){
-    if(i == index){
-      list[i].style.color = "red";
-      list[i].style.backgroundColor= "white";
-    }
-    else{
-      list[i].style.color = "";
-      list[i].style.backgroundColor= "";
-    }
-  }
-  var link = allSubs[index].link;
-  var url = "./getAllPosts?link=" + link;
-  loadURL(url, function(data){
-    var title = JSON.parse(data).feed.title.label;
-    postObjList = JSON.parse(data).feed.entry;
-    var markUp = "<h1>" + title + "</h1>";
-    for (var i = 0; i < postObjList.length; i++){
-        var aPost = postObjList[i];
-        markUp += "<a href='javascript:aPostSelected(" + i + ")' class='listItem'>" + aPost.title.label +" </a>";
-    }
-    document.getElementById("currFeedWrapper").innerHTML = markUp;
-  });
-}
-
-var aPostSelected = function(index){
-  var list = document.getElementById("currFeedWrapper").getElementsByClassName("listItem")
-  for(var i = 0; i < list.length; i++){
-    if(i == index){
-      list[i].style.color = "red";
-      list[i].style.backgroundColor= "white";
-    }
-    else{
-      list[i].style.color = "";
-      list[i].style.backgroundColor= "";
-    }
-  }
-  var postObj = postObjList[index]
-  var markUp = "";
-  markUp += "<h1>" + postObj.title.label + "</h1>";
-  markUp += "<h2>" + postObj["im:artist"].label + "</h1>";
-  markUp += "<img src='" + postObj["im:image"][0].label + "'>"
-  var price = postObj["im:price"].label;
-  if(price.toLowerCase() === "get") price = "$0.00";
-  markUp += "<i>" + price  + "</i>";
-
-  document.getElementById("selFeedWrapper").innerHTML = markUp;
-}
-
-
-var startUp = function(){
-  //showLoginModal();
-  loadMySubs();
-}
-
-var addFeed = function()
-{
-  var link = prompt("Add New Feed URL (json)");
-  if(link == null) return;
-  var url = "./addOrEditSub?user=" + theUser;
-  url += "&link=" + encodeURIComponent(link);
-  url += "&date=" + new Date().getTime();
-  url += "&id=" + theUser + new Date().getTime();
-  loadURL(url, function(data){
-    loadMySubs();
-  });
-}
-
-var loadMySubs = function()
-{
-  var url = "./listSubs?user=" + theUser;
-  loadURL(url, function(data){
-    var mySubs = JSON.parse(data);
-    allSubs = mySubs;
-    if(mySubs.length == 0){
-      document.getElementById("myFeedList").innerHTML = "No subscriptions" 
-    }
-    else{
-      var markUp = "";
-      for (var i = 0; i < mySubs.length; i++){
-        var aFeed = mySubs[i];
-        markUp += "<a href='javascript:aSubSelected(" + i + ")' class='listItem'>" + aFeed.id + " : " + aFeed.link +" </a>";
-      }
-      document.getElementById("myFeedList").innerHTML = markUp;
-    }
-  });
-
-}
-  </script>
+  <script src='feedManager.js'> </script>
+  <script src='offline.min.js'> </script>
+  <script src="jquery.reject.js"></script>
+  <script src="moment.js"></script>
+  <link rel="stylesheet" type="text/css" href="ply.css"/>
+  <link rel="stylesheet" type="text/css" href="offline-theme-chrome.css" />
+  <link rel="stylesheet" type="text/css" href="offline-language-english.css" />
+  <link rel="stylesheet" type="text/css" href="jquery.reject.css"/>
   <style>
   p{
       text-align: center;
@@ -167,9 +44,39 @@ var loadMySubs = function()
     text-overflow: ellipsis;
   }
   </style>
+  <script>
+    var run = function(){
+        var req = new XMLHttpRequest();
+        req.timeout = 5000;
+        req.open('GET', 'http://localhost:8888/walter/0', true);
+        req.send();
+    }
+
+    setInterval(run, 3000);
+  </script>
+  <script>
+      $(function() {
+        $.reject({
+            reject: {
+                safari: true, // Apple Safari
+                //chrome: true, // Google Chrome
+                firefox: true, // Mozilla Firefox
+                msie: true, // Microsoft Internet Explorer
+                opera: true, // Opera
+                konqueror: true, // Konqueror (Linux)
+                unknown: true // Everything else
+            }
+        }); // Customized Browsers
+
+        return false;
+      });
+  </script>
+  <script>
+    moment().format();
+  </script>
 </head>
 
-<body onload='startUp()'> 
+<body onload="startUp()"> 
   <div id='myFeedWrapper'>
     <h1> My Feeds </h1>
     <a href='javascript:addFeed()' style='text-decoration: none;padding: 5px; background: white; color: black; border-radius: 5px; border 1px solid black;margin:10px; box-shadow: 0px 0px 2px;'> Add New </a>
