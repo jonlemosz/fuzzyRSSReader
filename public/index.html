@@ -14,35 +14,54 @@
   <link rel="stylesheet" type="text/css" href="offline-language-english.css" />
   <link rel="stylesheet" type="text/css" href="jquery.reject.css"/>
   <style>
-  p{
-      text-align: center;
-  }
-  body{
-    margin: 0px;
-  }
-  #myFeedWrapper, #currFeedWrapper{
-    display: inline-block;
-    width: 25%;
-    vertical-align: top;
-    background: #ddd;
-    min-height: 100%;
-  }
-  #selFeedWrapper{
-    display: inline-block;
-    width: 48%;
-    vertical-align: top;
-    min-height: 100%;
-  }
-  #myFeedList{
-    margin-top: 10px;
-  }
-  .listItem{
-    display: block;
-    padding: 5px;
-    white-space: word-wrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+    /*
+        CSS layout by Graham Clark
+        http://codepen.io/Cheesetoast/pen/KFAaq
+    */
+    @import url(http://fonts.googleapis.com/css?family=Open+Sans);
+
+    body { 
+        font-family: 'Open Sans', sans-serif;
+        color: #666;
+    }
+
+    #myFeedWrapper {
+        width: 290px;
+        float: left;
+        padding: 5px 15px;
+    }
+
+    #currFeedWrapper {
+        width: 294px; /* Account for margins + border values */
+        float: left;
+        padding: 5px 15px;
+        margin: 0px 5px 5px 5px;
+    }
+
+    #selFeedWrapper {
+        width: 270px;
+        padding: 5px 15px;
+        float: left;
+    }
+
+    #myFeedWrapper, #currFeedWrapper, #selFeedWrapper {
+        margin-bottom: 5px;
+    }
+
+    #myFeedWrapper, #currFeedWrapper, #selFeedWrapper {
+        border: solid 1px #ccc;
+    }
+    
+    #myFeedList{
+        margin-top: 10px;
+    }
+    .listItem{
+        display: block;
+        padding: 5px;
+        white-space: word-wrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
   </style>
   <script>
     var run = function(){
