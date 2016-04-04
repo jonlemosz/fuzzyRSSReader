@@ -2,15 +2,14 @@
 <html>
 <head>
   <title>Fuzzy RSS Reader</title>
-  <script src='script.js'> </script>
-  <script src='jquery-2.2.1.min.js'> </script>
-  <script src='ply.js'> </script>
-
-  <script src="jquery.reject.js"></script>
-  <script src="moment.js"></script>
-  <link rel="stylesheet" type="text/css" href="ply.css"/>
-
-  <link rel="stylesheet" type="text/css" href="jquery.reject.css"/>
+  <script src="scripts/script.js"> </script>
+  <script src="scripts/jquery-2.2.1.min.js"> </script>
+  <script src="scripts/ply.js"> </script>
+  <script src="scripts/jquery.reject.js"></script>
+  <script src="scripts/moment.js"></script>
+  <script src="scripts/md5.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/ply.css"/>
+  <link rel="stylesheet" type="text/css" href="css/jquery.reject.css"/>
   <style>
     /*
         CSS layout by Graham Clark
@@ -73,7 +72,7 @@
 
             options.onaction = function (ui) {
                 var data = ui.data;
-                console.log(ui.data);             
+                console.log(hex_md5(ui.data.password));             
             };
 
             // Use base factory
@@ -179,7 +178,7 @@
     }
 
     var startUp = function(){
-        //showLoginModal();
+        showLoginModal();
         loadMySubs();
     }
 
@@ -231,7 +230,7 @@
     <div id='feedDetails'> </div>
   </div>
   <script src='offline.min.js'> </script>
-  <link rel="stylesheet" type="text/css" href="offline-theme-chrome.css" />
-  <link rel="stylesheet" type="text/css" href="offline-language-english.css" />
+  <link rel="stylesheet" type="text/css" href="css/offline-theme-chrome.css" />
+  <link rel="stylesheet" type="text/css" href="css/offline-language-english.css" />
 </body>
 </html>
