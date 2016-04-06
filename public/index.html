@@ -3,15 +3,94 @@
 <head>
   <title>Fuzzy RSS Reader</title>
   
-  <script src="scripts/script.js"> </script>
-  <script src="scripts/jquery-2.2.1.min.js"> </script>
-  <script src="scripts/ply.js"> </script>
+  <script src="scripts/script.js"></script>
+  <script src="scripts/jquery-2.2.1.min.js"></script>
+  <script src="scripts/ply.js"></script>
   <script src="scripts/jquery.reject.js"></script>
   <script src="scripts/moment.js"></script>
   <script src="scripts/md5.js"></script>
-  <script src='offline.min.js'> </script>
+  <script src="scripts/offline.min.js"></script>
+  
   <script>
-    var showLoginModal = function() {
+    var user = null;
+    var allSubs = null;
+    var postObjList = null;
+    var debug = null;
+    
+    var startUp = function(){
+        checkBrowsers();
+        showLogin();
+    }
+    
+    var run = function(){
+        var req = new XMLHttpRequest();
+        req.timeout = 5000;
+        req.open('GET', 'http://localhost:8888/walter/0', true);
+        req.send();
+    }
+
+    //setInterval(run, 3000);
+
+    var checkBrowsers = function() {
+        $.reject({
+            reject: {
+                safari: true, // Apple Safari
+                chrome: true, // Google Chrome
+                firefox: true, // Mozilla Firefox
+                msie: true, // Microsoft Internet Explorer
+                opera: true, // Opera
+                konqueror: true, // Konqueror (Linux)
+                unknown: true // Everything else
+            }
+        }); // Customized Browsers
+    }
+
+    moment().format();
+    
+    var showSignUp = function() {
+        Ply.dialog("prompt", {
+            title: "Sign Up",
+            form: {
+                email: "Email",
+                password: {hint: "Password", type: "password"}
+            }
+        })
+        .then((ui) => {
+            var data = ui.data;
+                
+            //Get email and password
+            var tempUser = data.email;
+            var password = hex_md5(data.password);
+            
+            if (tempUser.length > 0 && password.length > 0) {
+                var url = "./createUser?user=" + tempUser + "&password=" + password;
+                
+                loadURL(url, function(data) {
+                    var res = data;
+                    
+                    if (res == "1") {
+                        user = tempUser;
+                        login();
+                    }
+                    else {
+                        Ply.dialog("alert", "Email already in use")
+                        .then((ui) => {
+                            showSignUp();
+                        })
+                        .catch((ui) => {
+                            //Pressed cancel
+                        });
+                    }
+                });
+            }
+        })
+        .catch((ui) => {
+            //Pressed cancel
+        });
+    }
+      
+/*    
+    var showLogin = function() {
         Ply.factory('login', function (options, data, resolve) {
             options.flags = {
             closeBtn: false,
@@ -40,42 +119,89 @@
             Ply.dialog('alert', 'Bingo!');
         });
     }
-  </script>
-  <script>
-    var run = function(){
-        var req = new XMLHttpRequest();
-        req.timeout = 5000;
-        req.open('GET', 'http://localhost:8888/walter/0', true);
-        req.send();
+ */
+    
+    var showLogin = function() {
+        Ply.dialog("prompt", {
+            title: "Login",
+            form: {
+                email: "Email",
+                password: {hint: "Password", type: "password"}
+            }
+        })
+        .then((ui) => {
+            var data = ui.data;
+                    
+            //Get email and password
+            var tempUser = data.email;
+            var password = hex_md5(data.password);
+            
+            if (tempUser.length > 0 && password.length > 0) {
+                var url = "./login?user=" + tempUser + "&password=" + password;
+                
+                loadURL(url, function(data) {
+                    var res = data;
+                    
+                    console.log(res);
+                    
+                    if (res == "1") {
+                        user = tempUser;
+                        login();
+                    }
+                    else {
+                        Ply.dialog("alert", "Invalid email or password")
+                        .then((ui) => {
+                            showLogin();
+                        })
+                        .catch((ui) => {
+                            //Pressed cancel
+                        });
+                    }
+                });
+            }
+        })
+        .catch((ui) => {
+            //Pressed cancel
+        });
+    }    
+    
+    var login = function() {
+        if (user != null) {
+            //Display user in top right corner
+            document.getElementById("userName").innerHTML = user;
+            
+            //Change login button to logout
+            document.getElementById("loginButton").innerHTML = "Logout";
+            document.getElementById("loginButton").href = "javascript:logout()";
+            
+            //Hide sign up button
+            document.getElementById("signUpButton").style.visibility = "hidden";
+            
+            //Show add button and feed list
+            //document.getElementById("addButton").style.visibility = "visible";
+            
+            loadMySubs(0); //open first feed after loading
+        }
     }
 
-    //setInterval(run, 3000);
-  </script>
-  <script>
-      $(function() {
-        $.reject({
-            reject: {
-                safari: true, // Apple Safari
-                chrome: true, // Google Chrome
-                firefox: true, // Mozilla Firefox
-                msie: true, // Microsoft Internet Explorer
-                opera: true, // Opera
-                konqueror: true, // Konqueror (Linux)
-                unknown: true // Everything else
-            }
-        }); // Customized Browsers
-
-        return false;
-      });
-  </script>
-  <script>
-    moment().format();
-  </script>
-  <script>
-    var theUser = "test";
-    var allSubs = null;
-    var postObjList = null;
-    var debug = null;
+    var logout = function() {
+        //Clear out user
+        user = null;
+        document.getElementById("userName").innerHTML = "";
+        
+        //Change logout button to login
+        document.getElementById("loginButton").innerHTML = "Login";
+        document.getElementById("loginButton").href = "javascript:showLogin()";
+        
+        //Show sign up button
+        document.getElementById("signUpButton").style.visibility = "visible";
+        
+        //Hide add button and feed list
+        //document.getElementById("addButton").style.visibility = "hidden";
+        document.getElementById("myFeedList").innerHTML = "Login or sign up to view your feeds!";
+        
+        loadMySubs(-1); //no feeds to open
+    }
 
     var aSubSelected = function(index){
         var list = document.getElementById("myFeedList").getElementsByClassName("listItem");
@@ -127,25 +253,20 @@
         document.getElementById("selFeedWrapper").innerHTML = markUp;
     }
 
-    var startUp = function(){
-        showLoginModal();
-        loadMySubs();
-    }
-
     var addFeed = function() {
         var link = prompt("Add New Feed URL (json)");
         if(link == null) return;
-        var url = "./addOrEditSub?user=" + theUser;
+        var url = "./addOrEditSub?user=" + user;
         url += "&link=" + encodeURIComponent(link);
         url += "&date=" + new Date().getTime();
-        url += "&id=" + theUser + new Date().getTime();
+        url += "&id=" + user + new Date().getTime();
         loadURL(url, function(data){
             loadMySubs();
         });
     }
 
     var loadMySubs = function() {
-        var url = "./listSubs?user=" + theUser;
+        var url = "./listSubs?user=" + user;
         loadURL(url, function(data){
             var mySubs = JSON.parse(data);
             allSubs = mySubs;
@@ -163,10 +284,12 @@
         });
     }
   </script>
+  
   <link rel="stylesheet" type="text/css" href="css/ply.css"/>
   <link rel="stylesheet" type="text/css" href="css/jquery.reject.css"/>
   <link rel="stylesheet" type="text/css" href="css/offline-theme-chrome.css" />
   <link rel="stylesheet" type="text/css" href="css/offline-language-english.css" />
+  
   <style>
     /*
         CSS layout by Graham Clark
@@ -275,6 +398,12 @@
 </head>
 
 <body onload="startUp()"> 
+  <div id="loginBar">
+    <div style="float: right; margin: 1%;"><a id="signUpButton" href="javascript:showSignUp()" class="button">Sign Up</a></div>
+    <div style="float: right; margin: 1%;"><a id="loginButton" href="javascript:showLogin()" class="button">Login</a></div>
+    <div style="float: right; margin: 1%;" id="userName"></div>
+  </div>
+  </br></br>
   <div id='myFeedWrapper'>
     <div class="header"><h1> My Feeds </h1></div>
     <div class="content">
