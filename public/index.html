@@ -2,64 +2,14 @@
 <html>
 <head>
   <title>Fuzzy RSS Reader</title>
+  
   <script src="scripts/script.js"> </script>
   <script src="scripts/jquery-2.2.1.min.js"> </script>
   <script src="scripts/ply.js"> </script>
   <script src="scripts/jquery.reject.js"></script>
   <script src="scripts/moment.js"></script>
   <script src="scripts/md5.js"></script>
-  <link rel="stylesheet" type="text/css" href="css/ply.css"/>
-  <link rel="stylesheet" type="text/css" href="css/jquery.reject.css"/>
-  <style>
-    /*
-        CSS layout by Graham Clark
-        http://codepen.io/Cheesetoast/pen/KFAaq
-    */
-    @import url(http://fonts.googleapis.com/css?family=Open+Sans);
-
-    body { 
-        font-family: 'Open Sans', sans-serif;
-        color: #666;
-    }
-
-    #myFeedWrapper {
-        width: 290px;
-        float: left;
-        padding: 5px 15px;
-    }
-
-    #currFeedWrapper {
-        width: 290px;
-        float: left;
-        padding: 5px 15px;
-        margin: 0px 5px 5px 5px;
-    }
-
-    #selFeedWrapper {
-        width: 290px;
-        padding: 5px 15px;
-        float: left;
-    }
-
-    #myFeedWrapper, #currFeedWrapper, #selFeedWrapper {
-        margin-bottom: 5px;
-    }
-
-    #myFeedWrapper, #currFeedWrapper, #selFeedWrapper {
-        border: solid 1px #ccc;
-    }
-    
-    #myFeedList{
-        margin-top: 10px;
-    }
-    .listItem{
-        display: block;
-        padding: 5px;
-        white-space: word-wrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-  </style>
+  <script src='offline.min.js'> </script>
   <script>
     var showLoginModal = function() {
         Ply.factory('login', function (options, data, resolve) {
@@ -213,24 +163,135 @@
         });
     }
   </script>
+  <link rel="stylesheet" type="text/css" href="css/ply.css"/>
+  <link rel="stylesheet" type="text/css" href="css/jquery.reject.css"/>
+  <link rel="stylesheet" type="text/css" href="css/offline-theme-chrome.css" />
+  <link rel="stylesheet" type="text/css" href="css/offline-language-english.css" />
+  <style>
+    /*
+        CSS layout by Graham Clark
+        http://codepen.io/Cheesetoast/pen/KFAaq
+    */
+    @import url(http://fonts.googleapis.com/css?family=Open+Sans);
+
+    body { 
+        font-family: 'Open Sans', sans-serif;
+        color: #666;
+    }
+    
+    header {
+        height: 100px;
+        padding: 0 15px;
+    }
+
+    #myFeedWrapper {
+        width: 290px;
+        float: left;
+        padding: 5px 15px;
+    }
+
+    #currFeedWrapper {
+        width: 294px;
+        float: left;
+        padding: 5px 15px;
+        margin: 0px 5px 5px 5px;
+    }
+
+    #selFeedWrapper {
+        width: 270px;
+        padding: 5px 15px;
+        float: left;
+    }
+    
+    .listItem{
+        display: block;
+        padding: 5px;
+        white-space: word-wrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .content {
+        height: 75%;
+        padding: 20px;
+        overflow: auto;
+        border: solid 1px #ccc;
+        margin-bottom: 5px;
+    }
+    
+    /* for 980px or less */
+    @media screen and (max-width: 980px) {
+        
+        #myFeedWrapper {
+            width: 41%;
+            padding: 1% 4%;
+        }
+        #currFeedWrapper {
+            width: 41%;
+            padding: 1% 4%;
+            margin: 0px 0px 5px 5px;
+            float: right;
+        }
+        
+        #selFeedWrapper {
+            clear: both;
+            padding: 1% 4%;
+            width: auto;
+            float: none;
+        }
+    }
+
+    /* for 700px or less */
+    @media screen and (max-width: 600px) {
+
+        #myFeedWrapper {
+            width: auto;
+            float: none;
+        }
+        
+        #currFeedWrapper {
+            width: auto;
+            float: none;
+            margin-left: 0px;
+        }
+        
+        #selFeedWrapper {
+            width: auto;
+            float: none;
+        }
+
+    }
+    
+    header, #myFeedWrapper, #currFeedWrapper, #selFeedWrapper {
+        margin-bottom: 5px;
+    }
+
+    header, #myFeedWrapper, #currFeedWrapper, #selFeedWrapper {
+        border: solid 1px #ccc;
+    }
+  </style>
+
+
 </head>
 
 <body onload="startUp()"> 
   <div id='myFeedWrapper'>
-    <h1> My Feeds </h1>
-    <a href='javascript:addFeed()' style='text-decoration: none;padding: 5px; background: white; color: black; border-radius: 5px; border 1px solid black;margin:10px; box-shadow: 0px 0px 2px;'> Add New </a>
-    <div id='myFeedList'> </div>
+    <div class="header"><h1> My Feeds </h1></div>
+    <div class="content">
+        <div id='myFeedList'> </div>
+    </div>
   </div>
   <div id='currFeedWrapper'>
-    <h1> </h1>
-    <div id='currFeedList'> </div>
- </div>
-  <div id='selFeedWrapper'> 
-    <h1> </h1>
-    <div id='feedDetails'> </div>
+    <div class="header"><h1 id="currFeedTitle">Current Feed</h1></div>
+    <div class="content">
+        <div id='currFeedList'> </div>
+    </div>
   </div>
-  <script src='offline.min.js'> </script>
-  <link rel="stylesheet" type="text/css" href="css/offline-theme-chrome.css" />
-  <link rel="stylesheet" type="text/css" href="css/offline-language-english.css" />
+  <div id='selFeedWrapper'> 
+    <div class="header"><h1 id="currPostTitle">Feed Details</h1></div>
+    <div class="content">
+        <div id='feedDetails'> </div>
+    </div>
+  </div>
 </body>
 </html>
