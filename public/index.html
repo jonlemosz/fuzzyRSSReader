@@ -16,6 +16,8 @@
     var allSubs = null;
     var postObjList = null;
     var debug = null;
+    var currentSub = null; //current feed that is open
+    var currentSubLink = null; //link for current feed that is open
     
     var startUp = function(){
         checkBrowsers();
@@ -45,7 +47,7 @@
         }); // Customized Browsers
     }
 
-    moment().format();
+    //moment().format();
     
     var showSignUp = function() {
         Ply.dialog("prompt", {
@@ -88,39 +90,62 @@
             //Pressed cancel
         });
     }
-      
-/*    
+/*       
     var showLogin = function() {
-        Ply.factory('login', function (options, data, resolve) {
+        Ply.factory("login", function (options, data, resolve) {
             options.flags = {
-            closeBtn: false,
-            closeByEsc: true,
-            closeByOverlay: true,
-            visibleOverlayInStack: true
+                closeBtn: false,
+                closeByEsc: true,
+                closeByOverlay: true,
+                visibleOverlayInStack: true
             };
 
             options.onaction = function (ui) {
                 var data = ui.data;
-                console.log(hex_md5(ui.data.password));             
+                //console.log(hex_md5(data.password));
+                
+                var theUser = data.email;
+                var password = hex_md5(data.password); 
+                
+                if (theUser.length > 0 && password.length > 0) {
+                    var url = ".login?user=" + theUser + "&password=" + password;
+                    
+                    loadURL(url, function(data) {
+                        var res = data;
+                        
+                        console.log(res);
+                        
+                        if (res == "1") {
+                            user = theUser;
+                            login();
+                        }
+                        else {
+                            Ply.dialog("alert", "Invalid email or password");
+                            showLogin();
+                        }    
+                    });
+                }       
             };
 
             // Use base factory
-            Ply.factory.use('base', options, {
-            title: 'Login',
+            Ply.factory.use("base", options, {
+            title: "Login",
             form: {
-                user: 'User',
-                password: { hint: 'Password', type: 'password' }
+                email: "Email",
+                password: { hint: "Password", type: "password" }
             },
-            ok: 'Enter',
+            ok: "Enter",
             cancel: false
             }, resolve);
         });
-        Ply.dialog('login').done(function (ui) {
-            Ply.dialog('alert', 'Bingo!');
+        
+        Ply.dialog("login").done(function (ui) {
+            //Ply.dialog("alert", "Bingo!");
         });
+        
     }
  */
-    
+
     var showLogin = function() {
         Ply.dialog("prompt", {
             title: "Login",
@@ -164,7 +189,7 @@
             //Pressed cancel
         });
     }    
-    
+ 
     var login = function() {
         if (user != null) {
             //Display user in top right corner
@@ -178,9 +203,9 @@
             document.getElementById("signUpButton").style.visibility = "hidden";
             
             //Show add button and feed list
-            //document.getElementById("addButton").style.visibility = "visible";
+            document.getElementById("addButton").style.visibility = "visible";
             
-            loadMySubs(0); //open first feed after loading
+            loadMySubs(); //open first feed after loading
         }
     }
 
@@ -197,8 +222,8 @@
         document.getElementById("signUpButton").style.visibility = "visible";
         
         //Hide add button and feed list
-        //document.getElementById("addButton").style.visibility = "hidden";
-        document.getElementById("myFeedList").innerHTML = "Login or sign up to view your feeds!";
+        document.getElementById("addButton").style.visibility = "hidden";
+        //document.getElementById("myFeedList").innerHTML = "Login or sign up to view your feeds!";
         
         loadMySubs(-1); //no feeds to open
     }
@@ -207,12 +232,12 @@
         var list = document.getElementById("myFeedList").getElementsByClassName("listItem");
         for(var i = 0; i < list.length; i++){
             if(i == index){
-            list[i].style.color = "red";
-            list[i].style.backgroundColor= "white";
+                list[i].style.color = "red";
+                list[i].style.backgroundColor= "white";
             }
             else{
-            list[i].style.color = "";
-            list[i].style.backgroundColor= "";
+                list[i].style.color = "";
+                list[i].style.backgroundColor= "";
             }
         }
         var link = allSubs[index].link;
@@ -221,16 +246,22 @@
             var title = JSON.parse(data).feed.title.label;
             postObjList = JSON.parse(data).feed.entry;
             var markUp = "<h1>" + title + "</h1>";
+            
+            markUp += "<a href='javascript:deleteSub()' id='deleteButton' class='button' style='visibility: hidden;'> Delete </a>";
+            markUp += "</br></br>";
+            
             for (var i = 0; i < postObjList.length; i++){
                 var aPost = postObjList[i];
                 markUp += "<a href='javascript:aPostSelected(" + i + ")' class='listItem'>" + aPost.title.label +" </a>";
             }
+            
             document.getElementById("currFeedWrapper").innerHTML = markUp;
+            document.getElementById("deleteButton").style.visibility = "visible";
         });
     }
 
     var aPostSelected = function(index){
-        var list = document.getElementById("currFeedWrapper").getElementsByClassName("listItem")
+        var list = document.getElementById("currFeedWrapper").getElementsByClassName("listItem");
         for(var i = 0; i < list.length; i++){
             if(i == index){
             list[i].style.color = "red";
@@ -241,16 +272,22 @@
             list[i].style.backgroundColor= "";
             }
         }
-        var postObj = postObjList[index]
+        var postObj = postObjList[index];
         var markUp = "";
         markUp += "<h1>" + postObj.title.label + "</h1>";
-        markUp += "<h2>" + postObj["im:artist"].label + "</h1>";
-        markUp += "<img src='" + postObj["im:image"][0].label + "'>"
+        
+        markUp += "<img src='" + postObj["im:image"][2].label + "'>";
+        markUp += "</br>";
+        markUp += "<p>Artist(s): " + postObj["im:artist"].label + "</p>";
         var price = postObj["im:price"].label;
-        if(price.toLowerCase() === "get") price = "$0.00";
-        markUp += "<i>" + price  + "</i>";
+        if(price.toLowerCase() === "get") price = "Free";
+        markUp += "<p>Price: " + "<i>" + price  + "</i></p>";
+        
+        var released = postObj["im:releaseDate"].label;
+        markUp += "<p>Released: " + moment(released).fromNow() + "</p>";
 
         document.getElementById("selFeedWrapper").innerHTML = markUp;
+
     }
 
     var addFeed = function() {
@@ -271,15 +308,30 @@
             var mySubs = JSON.parse(data);
             allSubs = mySubs;
             if(mySubs.length == 0){
-            document.getElementById("myFeedList").innerHTML = "No subscriptions";
+                document.getElementById("myFeedList").innerHTML = "No subscriptions";
             }
             else{
-            var markUp = "";
-            for (var i = 0; i < mySubs.length; i++){
-                var aFeed = mySubs[i];
-                markUp += "<a href='javascript:aSubSelected(" + i + ")' class='listItem'>" + aFeed.id + " : " + aFeed.link +" </a>";
+                var markUp = "";
+                for (var i = 0; i < mySubs.length; i++){
+                    var aFeed = mySubs[i];
+                    markUp += "<a href='javascript:aSubSelected(" + i + ")' class='listItem'>" + aFeed.id +" </a>";
+                }
+                document.getElementById("myFeedList").innerHTML = markUp;
             }
-            document.getElementById("myFeedList").innerHTML = markUp;
+        });
+    }
+    
+    var deleteSub = function() {
+        var url = "./deleteSub?user=" + user + "&link=" + currentSubLink;
+        
+        loadURL(url, function(data) {
+            var res = data;
+            
+            if (res == "0") {
+                console.log("Error deleting sub");
+            }
+            else {
+                loadMySubs(0); //refresh myFeedList
             }
         });
     }
@@ -392,6 +444,17 @@
     header, #myFeedWrapper, #currFeedWrapper, #selFeedWrapper {
         border: solid 1px #ccc;
     }
+    
+    .button {
+        text-decoration: none;
+        padding: 5px;
+        background: white;
+        color: black;
+        border-radius: 5px;
+        border: 1px solid black;
+        margin: 0px;
+        box-shadow: 0px 0px 2px;
+    }
   </style>
 
 
@@ -399,29 +462,31 @@
 
 <body onload="startUp()"> 
   <div id="loginBar">
-    <div style="float: right; margin: 1%;"><a id="signUpButton" href="javascript:showSignUp()" class="button">Sign Up</a></div>
-    <div style="float: right; margin: 1%;"><a id="loginButton" href="javascript:showLogin()" class="button">Login</a></div>
-    <div style="float: right; margin: 1%;" id="userName"></div>
+    <div style="float: right; margin: 10px;"><a id="signUpButton" href="javascript:showSignUp()" class="button">Sign Up</a></div>
+    <div style="float: right; margin: 10px;"><a id="loginButton" href="javascript:showLogin()" class="button">Login</a></div>
+    <div style="float: right; margin: 10px;" id="userName"></div>
   </div>
   </br></br>
-  <div id='myFeedWrapper'>
+  <div id="myFeedWrapper">
     <div class="header"><h1> My Feeds </h1></div>
-    <div class="content">
-        <a href='javascript:addFeed()' style='text-decoration: none;padding: 5px; background: white; color: black; border-radius: 5px; border 1px solid black;margin:10px; box-shadow: 0px 0px 2px;'> Add New </a>
-        </br></br>
-        <div id='myFeedList'> </div>
+    <a href="javascript:addFeed()" class="button" id="addButton"> Add New </a>
+    </br></br>
+    <div class="content">      
+        <div id="myFeedList"> </div>
     </div>
   </div>
-  <div id='currFeedWrapper'>
+  <div id="currFeedWrapper">
     <div class="header"><h1 id="currFeedTitle">Current Feed</h1></div>
+    <a href="javascript:deleteSub()" id="deleteButton" class="button" style="visibility: hidden;"> Delete </a>
+    </br></br>
     <div class="content">
-        <div id='currFeedList'> </div>
+        <div id="currFeedList"> </div>
     </div>
   </div>
-  <div id='selFeedWrapper'> 
+  <div id="selFeedWrapper"> 
     <div class="header"><h1 id="currPostTitle">Feed Details</h1></div>
     <div class="content">
-        <div id='feedDetails'> </div>
+        <div id="feedDetails"> </div>
     </div>
   </div>
 </body>

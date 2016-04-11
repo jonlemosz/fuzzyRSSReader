@@ -1,5 +1,5 @@
 function authenticateUser(user, password, db, fn) {
-	db.collection("users").findOne({user: user, password: password}, function(err, user) {
+    db.collection("users").findOne({user: user, password: password}, function(err, user) {
 		if (err) {
 			return fn(err);
 		}
